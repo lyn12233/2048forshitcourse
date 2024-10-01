@@ -84,7 +84,7 @@ def update_frame(m:np.ndarray,*supplements:str):
     nbcspace=(max_col-est_col)//2 if est_col<max_col else 0
     nbrspace=(max_row-est_row)//2 if est_row<max_row else 0
 
-    CSPACE,RSPACE=' '*nbcspace,'\n'*nbrspace
+    CSPACE,RSPACE=' '*nbcspace,(' '*max_col+'\n')*nbrspace
 
     # generate outs
     outs=BKGD+FRGD+RSPACE
@@ -127,6 +127,8 @@ def mainloop(listener:keyboard.Listener,backend:backend_worker):
             code,*args=ack_queue.get(timeout=1/FPS)
         except Empty:
             actions_queue.put(('get_time',))
+        except KeyboardInterrupt:
+            break
         if code == 'move':
             state='playing'
             dir,m=args
@@ -145,7 +147,8 @@ def mainloop(listener:keyboard.Listener,backend:backend_worker):
             span,=args
             if state=='playing':
                 update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)} s')
-        
+    clear()
+    print('shutting down...'+BKGD+FRGD)
     listener.stop()
     backend.stop()
 
