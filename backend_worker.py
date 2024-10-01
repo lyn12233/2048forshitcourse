@@ -1,0 +1,101 @@
+from config import *
+from game_logic import update_matrix
+
+from threading import Thread
+from queue import Queue,Empty
+import numpy as np
+
+import os
+import json
+import time
+
+actions_queue=Queue()
+ack_queue=Queue()
+'''full actions:
+2. l/r/u/d: moving
+3. query_all'''
+
+class backend_worker(Thread):
+    def __init__(self) -> None:
+        super().__init__()
+        self.daemon=True
+        self.keep_running=True
+
+        # load user data
+        user_data_path=os.path.join(os.path.split(__file__)[0],'userdata.json')
+        if not os.path.isfile(user_data_path):
+            self.user_data={'users':{'':{'password':'',}},'current_user':''}
+        else:
+            with open(user_data_path,'r',encoding='utf8')as f:
+                self.user_data=json.load(f)
+        self.FW=open(user_data_path,'w',encoding='utf8')
+        self.flush_userdata()
+
+        # game state
+        self.game_state='pending'
+        self.start_time=1e99
+        self.end_time=0
+
+    def run(self):
+        while self.keep_running:
+            try:
+                code,*args=actions_queue.get(timeout=1)
+                if code == 'move':
+                    if self.game_state!='playing':
+                        # start the game
+                        self.game_state='playing'
+                        self.tiles=np.zeros((N,N),dtype=int)
+                        self.available_dirs={'l':True,'r':True,'u':True,'d':True}
+                        self.start_time=time.time()
+                    dir,*_=args
+                    self.tiles,available=update_matrix(self.tiles,dir)
+                    if not available:
+                        self.available_dirs[dir]=False
+
+                    # check and return
+                    # win
+                    if np.any(self.tiles>=LVWIN):
+                        self.end_time=time.time()
+                        used_time=self.end_time-self.start_time
+                        self.game_state='pending'
+                        ack_queue.put(('win',dir,np.copy(self.tiles),used_time))
+                    # fail
+                    elif tuple(self.available_dirs.values())==(False,)*4:
+                        self.end_time=time.time()
+                        self.game_state='pending'
+                        ack_queue.put(('fail',dir,np.copy(self.tiles)))
+                    # move done
+                    else:
+                        ack_queue.put((code,dir,np.copy(self.tiles)))
+             
+                elif code=='set_current_user':
+                    if self.game_state!='playing':
+                        self.user_data['current_user']=args[0]
+                 
+                elif code == 'get_time':
+                    if self.game_state=='playing':
+                        span=time.time()-self.start_time
+                    else:
+                        span=self.end_time-self.start_time
+                    ack_queue.put((code,span))
+                    
+                elif code=='get_current_user':
+                    ack_queue.put((code,self.user_data['current_user']))
+                
+                actions_queue.task_done()
+            except Empty:
+                pass
+        #stopped running
+        self.FW.close()
+    def stop(self):
+        self.keep_running=False
+    def _write(self):
+        self.FW.truncate(0)
+        self.FW.write(
+            json.dumps(self.user_data,indent=4)
+        )
+    def flush_userdata(self):
+        self.FW.truncate()
+        json.dump(self.user_data,self.FW)
+        self.FW.flush()
+        print(f'{self.user_data} dumped')
