@@ -75,100 +75,108 @@ assert LVWIN<len(present_text_up)and LVWIN<len(present_text_dn)and LVWIN<len(pre
 HCELL=len(present_text_up[0])
 LEADIN='### Ctrl+H for Hint, Ctrl+C for exit, Ctrl+Q to explain what this is ###'
 
-def update_frame(m:np.ndarray,*supplements:str):
-    '''refresh the console and update values'''
-    #supplements+=('_'*len(LEADIN),LEADIN)
-    # generate out string
-    assert m.shape==(N,N)
-    est_col=len(LU)+len(TU)*(N-1)+HCELL*N+len(RU)
-    est_row=3*N+1+len(supplements)
-    max_col,max_row=os.get_terminal_size().columns,os.get_terminal_size().lines
-    nbcspace=max((max_col-est_col)//2,0)
-    nbcspace2=max((max_col-est_col-nbcspace),0)
-    nbrspace=max((max_row-est_row-2)//2,0)
-    nbrspace2=max((max_row-est_row-nbrspace),0)
 
-    CSPACE,RSPACE=' '*nbcspace,(' '*max_col+'\n')*nbrspace
-    CSPACE2,RSPACE2=' '*nbcspace2,(' '*max_col+'\n')*(nbrspace2-2)
+class frontend_worker():
+    def __init__(self) -> None:
+        self.last_size=os.get_terminal_size()
+    def update_frame(self,m:np.ndarray,*supplements:str):
+        '''refresh the console and update values'''
+        supplements+=('_'*len(LEADIN),LEADIN)
+        # generate out string
+        assert m.shape==(N,N)
+        est_col=len(LU)+len(TU)*(N-1)+HCELL*N+len(RU)
+        est_row=3*N+1+len(supplements)
+        max_col,max_row=os.get_terminal_size()
+        nbcspace=max((max_col-est_col)//2,0)
+        nbcspace2=max((max_col-est_col-nbcspace),0)
+        nbrspace=max((max_row-est_row-2)//2,0)
+        nbrspace2=max((max_row-est_row-nbrspace),0)
 
-    # generate outs
-    outs=BKGD+FRGD+RSPACE
-    outs+=CSPACE+LU+(H*HCELL+TU)*(N-1)+H*HCELL+RU+CSPACE2+'\n'
-    for i in range(N):
+        CSPACE,RSPACE=' '*nbcspace,(' '*max_col+'\n')*nbrspace
+        CSPACE2,RSPACE2=' '*nbcspace2,(' '*max_col+'\n')*(nbrspace2-2)
 
-        outs+=CSPACE+V
-        for j in range(N):
-            outs+=present_color[m[i][j]]+present_text_up[m[i][j]] +BKGD+FRGD+V
-        outs+=CSPACE2+'\n'+CSPACE+V
-        for j in range(N):
-            outs+=present_color[m[i][j]]+present_text_dn[m[i][j]] +BKGD+FRGD+V
-        outs+=CSPACE2+'\n'+CSPACE
-        if i!=N-1:
-            outs+=TL+(H*HCELL+X)*(N-1)+H*HCELL+TR+CSPACE2+'\n'
-        else:
-            outs+=LD+(H*HCELL+TD)*(N-1)+H*HCELL+RD+CSPACE2+'\n'
+        # generate outs
+        outs=BKGD+FRGD+RSPACE
+        outs+=CSPACE+LU+(H*HCELL+TU)*(N-1)+H*HCELL+RU+CSPACE2+'\n'
+        for i in range(N):
 
-    #outs+=CSPACE+' '*est_col+CSPACE+'\n'
-    for s in supplements:
-        outs+=('{:^%d}'%(max_col,)).format(s)[:max_col]+'\n'
-    outs+=RSPACE2
-
-    # flush out string
-    print('\033[0;0H\033[?25l')
-    print(outs,end='',flush=True)
-        
-def mainloop(listener:keyboard.Listener,backend:backend_worker):
-    listener.start()
-    backend.start()
-
-    actions_queue.put(('get_current_user',))
-    user,span,m='',-1.,np.zeros((N,N),dtype=int)
-    state='pending'
-
-    update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}','_'*len(LEADIN),LEADIN)
-
-    while listener.is_alive():
-        try:
-            code,*args=ack_queue.get(timeout=1/FPS)
-        except Empty:
-            actions_queue.put(('get_time',))
-        except KeyboardInterrupt:
-            break
-        if code=='update_state':
-            state=args[0]
-        elif code == 'move':
-            if state=='pending':
-                clear()
-            dir,m=args
-            update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}'+' (CHEATED)'*(state=='cheating'))
-        elif code == 'win':
-            dir,m,new_rec,last_rec=args
-            span,d=new_rec['value'],new_rec['date']
-            span2,d2=last_rec['value'],last_rec['date']
-            if state=='cheating':
-                update_frame(m,'Finished! (CHEATED)')
-            elif span<span2:
-                update_frame(m,f'Congratulations {tr(user)}!',f'Finished game within {tr(span)} (new record!)',f'your record: {tr(span)}s at {d}')
+            outs+=CSPACE+V
+            for j in range(N):
+                outs+=present_color[m[i][j]]+present_text_up[m[i][j]] +BKGD+FRGD+V
+            outs+=CSPACE2+'\n'+CSPACE+V
+            for j in range(N):
+                outs+=present_color[m[i][j]]+present_text_dn[m[i][j]] +BKGD+FRGD+V
+            outs+=CSPACE2+'\n'+CSPACE
+            if i!=N-1:
+                outs+=TL+(H*HCELL+X)*(N-1)+H*HCELL+TR+CSPACE2+'\n'
             else:
-                update_frame(m,f'Congratulations {tr(user)}!',f'Finished game within {tr(span)}',f'your record: {tr(span2)}s at {d2}')
-        elif code == 'fail':
-            dir,m=args
-            update_frame(m,'You failed.')
-        elif code == 'get_current_user':
-            user,=args
-        elif code == 'get_time':
-            span,=args
-            if state!='pending':
-                update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}'+' (CHEATED)'*(state=='cheating'))
-    clear()
-    print('shutting down...')
-    listener.stop()
-    backend.stop()
+                outs+=LD+(H*HCELL+TD)*(N-1)+H*HCELL+RD+CSPACE2+'\n'
+
+        #outs+=CSPACE+' '*est_col+CSPACE+'\n'
+        for s in supplements:
+            outs+=('{:^%d}'%(max_col,)).format(s)[:max_col]+'\n'
+        outs+=RSPACE2
+
+        # fill with blancks is resized
+        if self.last_size!=(max_col,max_row):
+            self.last_size=(max_col,max_row)
+            clear()
+
+        # flush out string
+        print('\033[0;0H\033[?25l')
+        print(outs,end='',flush=True)
+
+    def mainloop(self,listener:keyboard.Listener,backend:backend_worker):
+        listener.start()
+        backend.start()
+
+        actions_queue.put(('get_current_user',))
+        user,span,m='',-1.,np.zeros((N,N),dtype=int)
+        state='pending'
+
+        self.update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}')
+
+        while listener.is_alive():
+            try:
+                code,*args=ack_queue.get(timeout=1/FPS)
+            except Empty:
+                actions_queue.put(('get_time',))
+            except KeyboardInterrupt:
+                break
+            if code=='update_state':
+                state=args[0]
+            elif code == 'move':
+                if state=='pending':
+                    clear()
+                dir,m=args
+                self.update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}'+' (CHEATED)'*(state=='cheating'))
+            elif code == 'win':
+                dir,m,new_rec,last_rec=args
+                span,d=new_rec['value'],new_rec['date']
+                span2,d2=last_rec['value'],last_rec['date']
+                if state=='cheating':
+                    self.update_frame(m,'Finished! (CHEATED)')
+                elif span<span2:
+                    self.update_frame(m,f'Congratulations {tr(user)}!',f'Finished game within {tr(span)} (new record!)',f'your record: {tr(span)} at {d}')
+                else:
+                    self.update_frame(m,f'Congratulations {tr(user)}!',f'Finished game within {tr(span)}',f'your record: {tr(span2)} at {d2}')
+            elif code == 'fail':
+                dir,m=args
+                self.update_frame(m,'You failed.')
+            elif code == 'get_current_user':
+                user,=args
+            elif code == 'get_time':
+                span,=args
+                if state!='pending':
+                    self.update_frame(m,f'user: {tr(user)}',f'used time: {tr(span)}'+' (CHEATED)'*(state=='cheating'))
+        clear()
+        print('shutting down...')
+        listener.stop()
+        backend.stop()
 
 if __name__=='__main__':
     clear()
+    assert hasattr(sys.stdout,'isatty') and sys.stdout.isatty(), 'current console doesn\'t support ANSI escape sequence'
     # mainloop
-    mainloop(
-        keyboard.Listener(on_press=on_press),
-        backend_worker()
-    )
+    frontend=frontend_worker()
+    frontend.mainloop(keyboard.Listener(on_press=on_press),backend_worker())
