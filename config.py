@@ -1,6 +1,6 @@
 N=4 # the tiles are N*N
-LVWIN=3 # level of winning
-FPS=10
+LVWIN=5 # level of winning
+FPS=60
 def tr(s:str|float,dtype=None)->str:
     'translate user name/ used time to representation form'
     if isinstance(s,str):
@@ -9,10 +9,10 @@ def tr(s:str|float,dtype=None)->str:
         else:
             return s
     elif isinstance(s,float):
-        if s<=0:
+        if s<=0 or s>1e19:
             return 'N.A.'
         else:
-            return f'{s:.3f}'
+            return f'{s:.3f}s'
     else:
         raise NotImplementedError
     

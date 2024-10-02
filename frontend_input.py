@@ -11,3 +11,8 @@ def on_press(key):
         actions_queue.put(('move','u'))
     elif key==keyboard.Key.down:
         actions_queue.put(('move','d'))
+    elif isinstance(key,keyboard.KeyCode):
+        if eval(str(key))=='\x08':
+            actions_queue.put(('hint',))
+        if eval(str(key))=='\x03':
+            return False
