@@ -24,11 +24,26 @@ class backend_worker(Thread):
         # load user data
         user_data_path=os.path.join(os.path.split(__file__)[0],'userdata.json')
         if not os.path.isfile(user_data_path):
-            self.user_data={'users':{'':{'password':'',}},'current_user':''}
+            self.user_data={
+                'users':{
+                    '':{
+                        'password':'',
+                        'record':{
+                            'value':1e99,
+                            'date':'N.A.'
+                        }
+                    }
+                },
+                'current_user':''
+            }
         else:
             with open(user_data_path,'r',encoding='utf8')as f:
                 self.user_data=json.load(f)
         self.FW=open(user_data_path,'w',encoding='utf8')
+        # reset current user if it has password
+        if self.user_data['users'][self.user_data['current_user']]['password']!='':
+            self.user_data['current_user']=''
+
         self.flush_userdata()
 
         # game state
@@ -63,7 +78,10 @@ class backend_worker(Thread):
                         self.game_state='pending'
                         # update record
                         user=self.user_data['current_user']
-                        new_record={'value':used_time,'date':time.strftime('%Y.%m.%d %H:%M',time.gmtime())}
+                        new_record={
+                            'value':used_time,
+                            'date':time.strftime('%Y.%m.%d %H:%M',time.gmtime())
+                        }
                         last_record=self.user_data['users'][user]['record'] if 'record' in self.user_data['users'][user] else {'value':1e99,'date':0}
                         #update record
                         if new_record['value']<last_record['value']:
@@ -81,9 +99,28 @@ class backend_worker(Thread):
                     else:
                         ack_queue.put((code,dir,np.copy(self.tiles)))
              
-                elif code=='set_current_user':
+                elif code=='set_user':
                     if self.game_state!='playing':
-                        self.user_data['current_user']=args[0]
+                        user2,passwd=args
+                        if user2 in self.user_data['users']:
+                            #assert passwd==self.user_data['users'][user]['password'],'wrong password'
+                            if passwd==self.user_data['users'][user2]['password']: # password correct
+                                self.user_data['current_user']=user2
+                            else: #log in failed
+                                pass
+                        elif str.isidentifier(user2):# sign up
+                            self.user_data['users'][user2]={
+                                'password':passwd,
+                                'record':{
+                                    'value':1e99,
+                                    'date':'N.A.'
+                                }
+                            }
+                            self.user_data['current_user']=user2
+                        else: # unqualified user name
+                            pass
+                        self.flush_userdata()
+                        ack_queue.put(('get_current_user',self.user_data['current_user']))
                  
                 elif code == 'get_time':
                     if self.game_state!='pending':
@@ -96,9 +133,7 @@ class backend_worker(Thread):
                     ack_queue.put((code,self.user_data['current_user']))
 
                 elif code=='hint':
-                    if self.game_state=='pending':
-                        pass
-                    else:
+                    if self.game_state!='pending':
                         self.game_state='cheating'
                         ack_queue.put(('update_state','cheating'))
                         sel=[]
