@@ -3,7 +3,7 @@ import time
 import os
 
 current_path=os.path.split(__file__)[0]
-icon_path = os.path.join(current_path,'my2048.ico')
+icon_path = os.path.join(current_path,'img','my2048.ico')
 title_prefix='2048'
 default_size=(400,300)
 
