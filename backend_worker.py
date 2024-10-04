@@ -12,8 +12,10 @@ import time
 actions_queue = Queue()
 ack_queue = Queue()
 """full actions:
-2. l/r/u/d: moving
-3. query time/user/hint"""
+1. l/r/u/d: moving
+2. query time
+3. hint
+4. get/set user"""
 
 
 class backend_worker(Thread):
