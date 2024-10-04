@@ -25,6 +25,8 @@
 #set footnote.entry(separator: none)
 #show footnote.entry: hide
 
+//#set enum(indent: 0.74cm,)
+
 
 #include "preface.typ"
 
@@ -45,24 +47,96 @@
 + *用户信息*: 游戏支持多用户记录, 以命令行启动参数的第1、2项作为用户名和密码, 尝试注册或登录。默认用户和密码均为空字符串。
 + *计时和得分*: 游戏实时显示一次游戏从开始经历的时间, 以从开始到胜利的用时作为得分, 以最短用时作为当前用户的记录。
 + *界面渲染*: 游戏利用ANSI转义序列实现命令行覆写和彩色输出, 打印文本进行类GUI渲染。同时游戏根据窗口大小实时调整, 使界面尽可能居中。
-+ *其他*: 游戏界面显示简短的操作说明。用户按Ctrl+C退出, 按Ctrl+Q打开GitHub主页。
++ *其他*: 游戏界面显示简短的操作说明。用户按Ctrl+C退出, 按Ctrl+Q打开网页说明。
+
+
+
 
 
 #Section[程序实现]
 
-#MYPAR() 采用模块化编程, 程序结构见(), 程序状态逻辑见()。
+#SubSection[程序结构]
 
+#MYPAR() 程序实现前后端分离的结构, 有利于实现实时交互和向图形界面的扩展。程序结构如 @fig_struct 所示。
+
+#figure(
+  image("../img/the_structure.svg", height: 10cm),
+  caption: [程序结构示意图]
+)<fig_struct>
+
+#MYPAR() 程序的主要组成部分为:
+
++ backend_worker: 实现了2048游戏的逻辑, 用时记录, 用户信息存储等, 设置并更新游戏状态。
++ on_press: 作为keyboard.Listener的调用函数, 处理键盘事件, 对方向键消息发送至backend_worker, 同时处理快捷键Ctrl+C和Ctrl+Q。
++ frontend_worker: 根据backend_worker的结果渲染命令行界面; 作为主循环决定是否运行, 同时根据命令行参数配置用户。
++ actions_queue, ack_queue: 内置库queue的实例, 负责在各部分间传递消息。
+
+#SubSection[运行流程]
+
+#MYPAR() 程序实现了3个游戏状态: 停止状态(pending)、运行状态(playing)和提示状态(cheated)。程序启动时为停止状态, 在停止状态下通过按方向键进入运行状态。运行状态下通过提示(Ctrl+H)进入提示状态。满足结束条件后回到停止状态。
 
 #Section[程序说明]
 
+#SubSection[依赖库]
+#MYPAR()第三方依赖库为numpy, pynput, 运行 #box(fill: luma(235), outset: 3pt)[#raw("pip install -r requirements.txt")] 安装。
+
 #SubSection[运行方法]
-#MYPAR()可以通过如下指令运行此2048小游戏。
+#MYPAR()可以通过如下指令运行此程序。
 
-#block()[
-#raw("\tcd path/to/game/folder\n\tpython .",lang:"bash")]
+#align(center)[
+#block(fill: luma(235), width: 16cm, outset: 3pt)[
+#set align(left)
+#raw("cd path/to/game/folder\npython . [<user_name>] [<password>]",lang:"bash", align: center)]]
 
-#MYPAR()
+#MYPAR() 也可以通过执行 #box(fill:luma(235), outset: 3pt,)[#raw("__main__.py")] 运行此程序。
 
-#SubSection[主要函数、值的说明]
+#SubSection[常量说明]
+#MYPAR()在config.py中定义了以下常量, 以便调试和演示:
++ N: 含N*N的方格。N通常为4。
++ LVWIN: 方格的值出现 $2^("LVWIN")$ 判定为胜利。降低LVWIN可方便调试。游戏时应为11。
 
 #Section[程序演示]
+
+#figure(
+  image("../img/on_start.png", height: 10cm),
+  caption: [启动界面, 方格样式的展示]
+)
+#figure(
+  image("../img/finish_anonymous.png", height: 10cm),
+  caption: [胜利结算画面(默认用户)]
+)
+#figure(
+  image("../img/new_record.png", height: 10cm),
+  caption: [胜利结算画面(名为user1的用户, 新纪录)]
+)
+#figure(
+  image("../img/cheating.png", height: 10cm),
+  caption: [提示模式]
+)
+#figure(
+  image("../img/fail.png", height: 10cm),
+  caption: [失败结算画面]
+)
+#figure(
+  image("../img/finish_cheated.png", height: 10cm),
+  caption: [提示模式下胜利]
+)
+
+#Section[评价与推广]
+
+#SubSection[本程序的优点]
++ 100%完成了作业要求。
++ 实现了彩色渲染、计时器等额外功能。
+
+#SubSection[本程序的缺点]
++ 提示模式不够智能。
++ 一定环境下程序退出时不能恢复原有颜色样式。
+
+#SubSection[程序的推广]
+#MYPAR() 可以利用wx、qt等图形界面库重写前端部分, 做出更为惊艳的实现。
+
+#Section[参考资料]
+
+[1] python+tkinter实现: #link("https://github.com/yangshun/2048-python")
+
+[2] cpp命令行实现: #link("https://github.com/plibither8/2048.cpp")

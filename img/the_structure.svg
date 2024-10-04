@@ -110,25 +110,6 @@
          d="M 5.77,0 -2.88,5 V -5 Z"
          id="path14-4-1" />
     </marker>
-    <marker
-       style="overflow:visible"
-       id="marker14-2-4"
-       refX="0"
-       refY="0"
-       orient="auto-start-reverse"
-       inkscape:stockid="Triangle arrow"
-       markerWidth="3"
-       markerHeight="1.5"
-       viewBox="0 0 1 1"
-       inkscape:isstock="true"
-       inkscape:collect="always"
-       preserveAspectRatio="none">
-      <path
-         transform="scale(0.5)"
-         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
-         d="M 5.77,0 -2.88,5 V -5 Z"
-         id="path14-4-7" />
-    </marker>
   </defs>
   <g
      inkscape:label="图层 1"
@@ -274,25 +255,25 @@
     <text
        xml:space="preserve"
        style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="101.17826"
+       x="95.171356"
        y="63.238457"
        id="text8"><tspan
          sodipodi:role="line"
          id="tspan8"
          style="fill:#000000;fill-opacity:1;stroke-width:0;stroke-dasharray:none"
-         x="101.17826"
-         y="63.238457">输入</tspan></text>
+         x="95.171356"
+         y="63.238457">on_press</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       x="101.37119"
+       x="85.595711"
        y="101.69123"
        id="text9"><tspan
          sodipodi:role="line"
          id="tspan9"
          style="fill:#000000;fill-opacity:1;stroke-width:0;stroke-dasharray:none"
-         x="101.37119"
-         y="101.69123">输出</tspan></text>
+         x="85.595711"
+         y="101.69123">frontend_worker</tspan></text>
     <rect
        style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:0.176389;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect9"
@@ -348,7 +329,7 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.176389;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker14)"
-       d="M 216.71786,56.980959 V 69.532495"
+       d="m 216.71786,56.980959 0,12.551536"
        id="path15"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0"
@@ -379,20 +360,86 @@
        id="path13-7-0"
        sodipodi:nodetypes="cc" />
     <path
-       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.176389;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker14-2-4)"
-       d="M 82.919071,61.453892 H 64.884728"
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.176;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker14)"
+       d="M 80.802403,61.453892 H 62.76806"
        id="path13-7-1"
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
        style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.176389;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0"
-       x="211.7886"
+       x="197.63701"
        y="133.985"
        id="text17"><tspan
          sodipodi:role="line"
          id="tspan17"
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.176389;stroke-opacity:0"
-         x="211.7886"
-         y="133.985">后端</tspan></text>
+         x="197.63701"
+         y="133.985">backend_worker</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.93889px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="131.55099"
+       y="101.81165"
+       id="text12"><tspan
+         sodipodi:role="line"
+         id="tspan12"
+         style="font-size:4.93889px;stroke-width:0"
+         x="131.55099"
+         y="101.81165">get_user, set_user</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="140.8643"
+       y="94.085831"
+       id="text13"><tspan
+         sodipodi:role="line"
+         id="tspan13"
+         style="stroke-width:0"
+         x="140.8643"
+         y="94.085831">get_time</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="144.99167"
+       y="51.752502"
+       id="text14"><tspan
+         sodipodi:role="line"
+         id="tspan14"
+         style="stroke-width:0"
+         x="144.99167"
+         y="51.752502">move</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="133.77333"
+       y="134.19667"
+       id="text15"><tspan
+         sodipodi:role="line"
+         id="tspan15"
+         style="stroke-width:0"
+         x="133.77333"
+         y="134.19667">move, update_state</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="133.56177"
+       y="140.86418"
+       id="text16"><tspan
+         sodipodi:role="line"
+         id="tspan16"
+         style="stroke-width:0"
+         x="133.56177"
+         y="140.86418">ack_user, ack_time</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.9389px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;stroke-width:0"
+       x="164.25333"
+       y="152.82332"
+       id="text18"><tspan
+         sodipodi:role="line"
+         id="tspan18"
+         style="stroke-width:0"
+         x="164.25333"
+         y="152.82332" /></text>
   </g>
 </svg>
