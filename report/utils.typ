@@ -48,11 +48,12 @@
     context TheSection.display("一、")
   }
   context body
+  v(-7pt)
   parbreak()
 }
 #let SubSection(body,inc:true)={
   set text(font: font_zh.HeiTi, size: font_size_zh.SiHao)
-  v(1*(font_size_zh.SiHao))
+  v(1*(font_size_zh.SiHao)/2)
   if inc{
     TheSubSection.step()
     TheSubSub.update(0)
