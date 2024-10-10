@@ -17,7 +17,7 @@ def clear():
         os.system("clear")
 
 
-# defining colors and representations.
+# defining colors and representations(ANSI escape sequence).
 # each tile is 4*2 spaces
 BKGD = "\033[48;2;255;255;255m"  # white background
 FRGD = "\033[38;2;0;0;0m"  # black border

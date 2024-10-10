@@ -12,6 +12,12 @@
 #show figure.where(kind:table): set figure.caption(position:top)
 #set pagebreak(weak: true)
 
+#set page(footer: none)
+#set heading(numbering: "1.1")
+#include "preface.typ"
+#outline(title: [#h(7.6cm)目录], depth: 2, indent: true)
+#pagebreak(weak: true)
+
 //page style
 #set page(
   footer: [
@@ -25,20 +31,80 @@
 #set footnote.entry(separator: none)
 #show footnote.entry: hide
 
-//#set enum(indent: 0.74cm,)
+#{counter(page).update(1)}
+
+#Section[设计概述]
+#SubSection[设计目的]
+#MYPAR() 2048是一款著名的益智小游戏。其设计简单, 且易于得到较好的输出效果。
+本作业设计2048小游戏, 并按要求实现提示模式, 以期锻炼编程本领, 实践程序设计知识。
+#SubSection[设计内容]
+#MYPAR()设计内容包含如下几个方面:
++ *2048小游戏规则* : 2048小游戏主要组成部分为4*4的方格阵列, 
+方格为空或显示2, ..., 2048之一的数值; 游戏的主要流程为用户通过按方向键, 
+使方格按移动方向依次尝试与该方向相邻方格合并(如果方格与相邻方格未发生合并且代表的值相同则进行合并。每进行一次移动后, 尝试在空方格生成2个值为2或4的方格, 空方格为一个时将其值改变为2或4); 
+游戏的结束判定为: 方格阵不能发生改变则为失败、出现值为2048的方格则为胜利。
++ *提示模式* : 用户按下Ctrl+H请求提示, 此时方格进行一次合并, 以尽可能达到游戏胜利。
++ *用户得分记录* : 作业参考#link("")[Minesweeper Arbiter] 以游戏用时作为用户得分, 
+最短用时为该用户的纪录; 作业同时实现用户注册、登录。
+#SubSection[应用平台]
+#MYPAR() 本程序实现在Windows11下进行搭建和测试, 理论上可以在任何支持Python和具有tty功能
+(即支持ANSI转义序列渲染)的平台上运行。
+#SubSection[开发工具]
++ *编译器* Python 3.11
++ *程序编辑器* VSCode(最新版本, 插件pylancer, python 等)
++ *终端* PowerShell(最新版本)
+#SubSection[软件库]
+#MYPAR()  使用的Python库包括:
+#{
+  set align(center)
+  table(
+    align: center,
+    stroke: none,
+    columns: (3cm,4cm,6.5cm),
+    table.hline(y:0, stroke: 1pt),
+    table.hline(y:1, stroke: 0.5pt),
+    table.hline(y:7, stroke: 1pt),
+    [库名称],[版本],[简介],
+    [numpy],[],[实现常见的数学运算],
+    [pynput],[],[实现跨平台兼容的键盘监听],
+    [queue],[(内置库)],[实现跨线程通信],
+    [time],[(内置库)],[获取当前时间],
+    [json],[(内置库)],[配置信息存取],
+    [os,sys],[(内置库)],[包含多种系统功能],
+  )
+}
+
+#Section[详细设计]
+#SubSection[总体方案]
+
+#MYPAR() 程序实现前后端分离的结构, 有利于实现实时交互和向图形界面的扩展。程序结构如 @fig_struct 所示。
+
+#figure(
+  image("../img/the_structure.svg", height: 5cm),
+  caption: [程序结构示意图]
+)<fig_struct>
+
+#MYPAR() 程序的主要组成部分为:
+
++ backend_worker: 实现了2048游戏的逻辑, 用时记录, 用户信息存储等, 设置并更新游戏状态。
++ on_press: 作为keyboard.Listener的调用函数, 处理键盘事件, 对方向键消息发送至backend_worker, 同时处理快捷键Ctrl+C和Ctrl+Q。
++ frontend_worker: 根据backend_worker的结果渲染命令行界面; 作为主循环决定是否运行, 同时根据命令行参数配置用户。
++ actions_queue, ack_queue: 内置库queue的实例, 负责在各部分间传递消息。
 
 
-#include "preface.typ"
+#SubSection[功能实现]
 
-#Section[设计目标]
+#Section[完成情况]
+#SubSection[程序运行结果]
+#SubSection[程序使用说明]
+#SubSection[主要研究过程]
 
-#MYPAR() 本次程序设计计划在命令行实现实时交互的2048小游戏。设计目标如下。
+ #Section[设计总结]
+ #SubSection[存在的问题]
+ #SubSection[改进措施]
+ #SubSection[课程收获]
+ #SubSection[课程建议]
 
-#SubSection[2048小游戏规则]
-
-#MYPAR() 2048是一款著名的益智小游戏。其操作对象通常为4*4的方格阵列, 方格为空或显示2, ..., 2048之一的数, 操作规则为:
-+ *移动*: 玩家给出移动方向, 方格按移动方向依次尝试与该方向相邻方格合并, 如果方格与相邻方格未发生合并且代表的值相同则进行合并。每进行一次移动后, 尝试在空方格生成2个值为2或4的方格, 空方格为一个时将其值改变为2或4。
-+ *结束判定*: 发生一次移动后, 如果方格阵未发生改变, 且各个方向的移动均不可能改变方格阵, 则判定为失败; 如果首次出现值为2048的方格, 则判定为成功。
 
 #SubSection[程序功能]
 
@@ -54,22 +120,10 @@
 
 
 #Section[程序实现]
-
 #SubSection[程序结构]
 
-#MYPAR() 程序实现前后端分离的结构, 有利于实现实时交互和向图形界面的扩展。程序结构如 @fig_struct 所示。
 
-#figure(
-  image("../img/the_structure.svg", height: 5cm),
-  caption: [程序结构示意图]
-)<fig_struct>
 
-#MYPAR() 程序的主要组成部分为:
-
-+ backend_worker: 实现了2048游戏的逻辑, 用时记录, 用户信息存储等, 设置并更新游戏状态。
-+ on_press: 作为keyboard.Listener的调用函数, 处理键盘事件, 对方向键消息发送至backend_worker, 同时处理快捷键Ctrl+C和Ctrl+Q。
-+ frontend_worker: 根据backend_worker的结果渲染命令行界面; 作为主循环决定是否运行, 同时根据命令行参数配置用户。
-+ actions_queue, ack_queue: 内置库queue的实例, 负责在各部分间传递消息。
 
 #SubSection[运行流程]
 

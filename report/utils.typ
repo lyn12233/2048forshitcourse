@@ -31,6 +31,8 @@
   Monospaced: ("Courier New","SimHei"),
 )
 
+#set heading(numbering: "1.1")
+
 // latex like section, subsection, subsub
 //counters
 #let TheSection=counter("the_section")
@@ -38,6 +40,7 @@
 #let TheSubSub=counter("the_sub_sub_section")
 //section
 #let Section(body,inc:true)={
+  hide(heading(level: 1,body))
   set text(font: font_zh.HeiTi, size: font_size_zh.SanHao)
   //set align(center)
   v(1*(font_size_zh.SanHao))
@@ -52,6 +55,7 @@
   parbreak()
 }
 #let SubSection(body,inc:true)={
+  hide(heading(level: 2,body))
   set text(font: font_zh.HeiTi, size: font_size_zh.SiHao)
   v(1*(font_size_zh.SiHao)/2)
   if inc{
