@@ -43,7 +43,7 @@
   hide(heading(level: 1,body))
   set text(font: font_zh.HeiTi, size: font_size_zh.SanHao)
   //set align(center)
-  v(1*(font_size_zh.SanHao))
+  v(-10pt)
   if inc{
     TheSection.step()
     TheSubSection.update(0)
@@ -57,7 +57,7 @@
 #let SubSection(body,inc:true)={
   hide(heading(level: 2,body))
   set text(font: font_zh.HeiTi, size: font_size_zh.SiHao)
-  v(1*(font_size_zh.SiHao)/2)
+  v(-10pt)
   if inc{
     TheSubSection.step()
     TheSubSub.update(0)
@@ -69,8 +69,9 @@
   v(-3pt)
 }
 #let SubSub(body,inc:true)={
+  hide(heading(level: 3,body))
   set text(font: font_zh.HeiTi, size: font_size_zh.XiaoSi)
-  v(0.8*(font_size_zh.XiaoSi))
+  v(-10pt)
   if inc{
     TheSubSub.step()
     context TheSection.display("1.")
@@ -89,4 +90,10 @@
   //v(PARSKIP)
   //parbreak()
   h(0.74cm)
+}
+
+#let b(body)={
+  [ ]
+  box(raw(body), fill: luma(235), outset: 3pt)
+  [ ]
 }
