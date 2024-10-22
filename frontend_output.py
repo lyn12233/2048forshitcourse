@@ -168,16 +168,16 @@ class frontend_worker:
 
         # determine initial user
         if user != "":
-            actions_queue.put(("set_user", user, passwd))
+            actions_queue.put((SET_USER, user, passwd))
         else:
-            actions_queue.put(("get_current_user",))
+            actions_queue.put((GET_CURRENT_USER,))
 
         # used time, also span
         span = -1.0
         # showcasing the colors
         m = np.array(((0, 1, 2, 3), (4, 5, 6, 7), (8, 9, 10, 11), (0, 0, 0, 0)))
         # initial state
-        state = "pending"
+        state = PENDING
         # initial frame when started
         self.update_frame(m, f"user: {tr(user)}", f"used time: {tr(span)}")
 
@@ -189,33 +189,34 @@ class frontend_worker:
                 code, *args = ack_queue.get(timeout=1 / FPS)
             except Empty:
                 # default routine: update time and user
-                actions_queue.put(("get_time",))
-                actions_queue.put(("get_current_user",))
+                actions_queue.put((GET_TIME,))
+                actions_queue.put((GET_CURRENT_USER,))
+                continue
             except KeyboardInterrupt:
                 # shutoff
                 break
 
             # process the received command
-            if code == "update_state":
+            if code == UPDATE_STATE:
                 # align state with backend
                 state = args[0]
 
-            elif code == "move":
-                if state == "pending":
+            elif code == ACK_MOVE:
+                if state == PENDING:
                     # first step need clearance
                     clear()
                 dir, m = args
                 self.update_frame(
                     m,
                     f"user: {tr(user)}",
-                    f"used time: {tr(span)}" + " (CHEATED)" * (state == "cheating"),
+                    f"used time: {tr(span)}" + " (CHEATED)" * (state == CHEATING),
                 )
 
-            elif code == "win":
+            elif code == WIN:
                 dir, m, new_rec, last_rec = args
                 span, d = new_rec["value"], new_rec["date"]
                 span2, d2 = last_rec["value"], last_rec["date"]
-                if state == "cheating":
+                if state == CHEATING:
                     self.update_frame(m, "Finished! (CHEATED)")
                 elif span < span2:
                     self.update_frame(
@@ -232,22 +233,24 @@ class frontend_worker:
                         f"your record: {tr(span2)} at {d2}",
                     )
 
-            elif code == "fail":
+            elif code == FAIL:
                 dir, m = args
                 self.update_frame(m, "You failed.")
 
-            elif code == "get_current_user":
+            elif code == ACK_CURRENT_USER:
                 (user,) = args
 
-            elif code == "get_time":
+            elif code == ACK_TIME:
                 (span,) = args
                 # when pending maintain win/fail result page
-                if state != "pending":
+                if state != PENDING:
                     self.update_frame(
                         m,
                         f"user: {tr(user)}",
-                        f"used time: {tr(span)}" + " (CHEATED)" * (state == "cheating"),
+                        f"used time: {tr(span)}" + " (CHEATED)" * (state == CHEATING),
                     )
+            else:
+                raise NotImplementedError(f"fontend: code {code} uncaught")
         # mainloop is over
         clear()
         print("shutting down...")

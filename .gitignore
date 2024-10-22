@@ -4,3 +4,5 @@ userdata.json
 *.pdf
 *.zip
 *.ps1
+log.npz
+label.npz

@@ -7,7 +7,7 @@
    viewBox="0 0 10 10"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    sodipodi:docname="tile_2.svg"
    inkscape:export-filename="tile_0.jpg"
    inkscape:export-xdpi="96"
@@ -35,7 +35,7 @@
      inkscape:window-x="-11"
      inkscape:window-y="-11"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer3" />
+     inkscape:current-layer="layer2" />
   <defs
      id="defs1">
     <rect
@@ -58,10 +58,9 @@
   <g
      inkscape:label="图层 1"
      inkscape:groupmode="layer"
-     id="layer1"
-     sodipodi:insensitive="true">
+     id="layer1">
     <rect
-       style="display:inline;fill:#e2cbb5;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       style="display:inline;fill:#fad2a0;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="rect1"
        height="10"
        x="0"
@@ -74,10 +73,9 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="图层 2"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <rect
-       style="display:inline;fill:#eee4da;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       style="display:inline;fill:#fed8b1;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="rect2"
        width="8"
        height="8"
@@ -100,6 +98,6 @@
          id="tspan14"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.8px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;fill-opacity:1;stroke-width:0"
          x="3.6734374"
-         y="6.538672">1</tspan></text>
+         y="6.538672">4</tspan></text>
   </g>
 </svg>

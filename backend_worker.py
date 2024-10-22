@@ -44,49 +44,44 @@ class backend_worker(Thread):
         self.flush_userdata()
 
         # game state
-        self.game_state = "pending"
+        self.game_state = PENDING
         self.start_time = 1e99
         self.end_time = 0
+
+        self.logs=[]
 
     def run(self):
         while self.keep_running:
             try:
                 code, *args = actions_queue.get(timeout=1)
-                if code == "move":
-                    if self.game_state == "pending":
+
+                if code == MOVE:
+                    if self.game_state == PENDING:
                         # start the game
-                        self.game_state = "playing"
-                        ack_queue.put(("update_state", "playing"))
+                        self.game_state = PLAYING
+                        ack_queue.put((UPDATE_STATE, PLAYING))
                         self.tiles = np.zeros((N, N), dtype=int)
-                        self.available_dirs = {
-                            "l": True,
-                            "r": True,
-                            "u": True,
-                            "d": True,
-                        }
                         self.start_time = time.time()
 
+                    #log
+                    if TRACK:
+                        self.logs.append(self.tiles.copy())
                     # conduct move
                     dir, *_ = args
                     self.tiles, available = update_matrix(self.tiles, dir)
                     if not available:
-                        for dir in "lrud":
-                            _, available = update_matrix(self.tiles, dir)
-                            self.available_dirs[dir] = available
+                        available_dirs=[
+                            update_matrix(self.tiles,'lrud'[dir])[1] for dir in range(4)
+                        ]
                     else:
-                        self.available_dirs = {
-                            "l": True,
-                            "r": True,
-                            "u": True,
-                            "d": True,
-                        }
+                        available_dirs=[True,]
 
                     # check for return
                     # win
                     if np.any(self.tiles >= LVWIN):
                         self.end_time = time.time()
                         used_time = self.end_time - self.start_time
-                        self.game_state = "pending"
+                        self.game_state = PENDING
                         # generate record
                         user = self.user_data["current_user"]
                         new_record = {
@@ -103,21 +98,21 @@ class backend_worker(Thread):
                             self.user_data["users"][user]["record"] = new_record
                             self.flush_userdata()
                         ack_queue.put(
-                            ("win", dir, np.copy(self.tiles), new_record, last_record)
+                            (WIN, dir, np.copy(self.tiles), new_record, last_record)
                         )
-                        ack_queue.put(("update_state", "pending"))
+                        ack_queue.put((UPDATE_STATE, PENDING))
                     # fail
-                    elif tuple(self.available_dirs.values()) == (False,) * 4:
+                    elif not np.any(available_dirs):
                         self.end_time = time.time()
-                        self.game_state = "pending"
-                        ack_queue.put(("fail", dir, np.copy(self.tiles)))
-                        ack_queue.put(("update_state", "pending"))
+                        self.game_state = PENDING
+                        ack_queue.put((FAIL, dir, np.copy(self.tiles)))
+                        ack_queue.put((UPDATE_STATE, PENDING))
                     # move done
                     else:
-                        ack_queue.put((code, dir, np.copy(self.tiles)))
+                        ack_queue.put((ACK_MOVE, dir, np.copy(self.tiles)))
 
-                elif code == "set_user":
-                    if self.game_state != "playing":
+                elif code == SET_USER:
+                    if self.game_state != PLAYING:
                         user2, passwd = args
                         if user2 in self.user_data["users"]:  # new user
                             # assert passwd==self.user_data['users'][user]['password'],'wrong password'
@@ -137,31 +132,37 @@ class backend_worker(Thread):
                             pass
                         self.flush_userdata()
                         ack_queue.put(
-                            ("get_current_user", self.user_data["current_user"])
+                            (ACK_CURRENT_USER, self.user_data["current_user"])
                         )
 
-                elif code == "get_time":
-                    if self.game_state != "pending":
+                elif code == GET_TIME:
+                    if self.game_state != PENDING:
                         span = time.time() - self.start_time
                     else:
                         span = self.end_time - self.start_time
-                    ack_queue.put((code, span))
+                    ack_queue.put((ACK_TIME, span))
 
-                elif code == "get_current_user":
-                    ack_queue.put((code, self.user_data["current_user"]))
+                elif code == GET_CURRENT_USER:
+                    ack_queue.put((ACK_CURRENT_USER, self.user_data["current_user"]))
 
-                elif code == "hint":
-                    if self.game_state != "pending":
-                        self.game_state = "cheating"
-                        ack_queue.put(("update_state", "cheating"))
+                elif code == HINT:
+                    if self.game_state != PENDING:
+                        self.game_state = CHEATING
+                        ack_queue.put((UPDATE_STATE, CHEATING))
                         sel = []
-                        for dir in "lrud":
+                        for dir in range(4):
                             tails, available = update_matrix(self.tiles, dir)
                             sel.append((np.sum(tails == 0), dir))
                         best_dir = max(sel)[1]
                         # raise
                         if actions_queue.empty():
-                            actions_queue.put(("move", best_dir))
+                            actions_queue.put((MOVE, best_dir))
+                elif code==LOG:
+                    last=np.load('./log.npz')['arr_0']
+                    np.savez('./log.npz',np.concatenate((self.logs,last)))
+                    self.logs=[]
+                else:
+                    raise NotImplementedError(f"backend: code {code} uncaught")
                 actions_queue.task_done()
             except Empty:
                 pass

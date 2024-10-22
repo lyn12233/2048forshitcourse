@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   sodipodi:docname="tile_0.svg"
+   sodipodi:docname="tile_7.svg"
    inkscape:export-filename="tile_0.jpg"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
@@ -29,7 +29,7 @@
      inkscape:document-units="mm"
      inkscape:zoom="1"
      inkscape:cx="99.5"
-     inkscape:cy="-60.5"
+     inkscape:cy="179.5"
      inkscape:window-width="2560"
      inkscape:window-height="1334"
      inkscape:window-x="-11"
@@ -38,23 +38,6 @@
      inkscape:current-layer="layer1" />
   <defs
      id="defs1">
-    <inkscape:path-effect
-       effect="fillet_chamfer"
-       id="path-effect1"
-       is_visible="true"
-       lpeversion="1"
-       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
-       radius="0"
-       unit="px"
-       method="auto"
-       mode="F"
-       chamfer_steps="1"
-       flexible="false"
-       use_knot_distance="true"
-       apply_no_radius="true"
-       apply_with_radius="true"
-       only_selected="false"
-       hide_knots="false" />
     <rect
        x="55"
        y="56"
@@ -77,22 +60,44 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#d3d3d3;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;fill-opacity:1"
+       style="display:inline;fill:#82aaaa;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="rect1"
-       width="10"
        height="10"
        x="0"
        y="0"
-       rx="1"
-       ry="1" />
+       width="10"
+       rx="1.8897638"
+       ry="1.8897638" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="图层 2"
-     style="display:inline;fill:#f8e4da;fill-opacity:1" />
+     style="display:inline">
+    <rect
+       style="display:inline;fill:#84b0b2;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       id="rect2"
+       width="8"
+       height="8"
+       x="1"
+       y="1"
+       rx="1.3228346"
+       ry="1.3228346" />
+  </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="图层 3" />
+     inkscape:label="图层 3">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.8px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none"
+       x="1.0214841"
+       y="6.5316405"
+       id="text14"><tspan
+         sodipodi:role="line"
+         id="tspan14"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.8px;font-family:Consolas;-inkscape-font-specification:Consolas;fill:#251b11;fill-opacity:1;stroke-width:0"
+         x="1.0214841"
+         y="6.5316405">128</tspan></text>
+  </g>
 </svg>
