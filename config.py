@@ -1,5 +1,5 @@
 N = 4  # the tiles are N*N
-LVWIN = 1  # level of winning
+LVWIN = 11  # level of winning
 FPS = 60  # frame per second/ for time presenting
 
 ACTIONS=L,R,U,D,NOP=range(5)
@@ -26,11 +26,15 @@ ACTIONS=L,R,U,D,NOP=range(5)
     *_
 )=range(100)
 
-TRACK=True
+# TRACK=True # track tiles matrix for training
+TRACK=False
+
+# GUI config
 GUI_SIZE=(900,500)
 GUI_GRID_SIZE=(500,500)
 GUI_TILE_SIZE=(100,100)
 
+#translation util
 def tr(s: str | float, dtype=None) -> str:
     "translate user name/ used time to representation form"
     if isinstance(s, str):

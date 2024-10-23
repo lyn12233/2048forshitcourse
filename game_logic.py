@@ -41,10 +41,11 @@ def update_matrix(m: np.ndarray, dir: str|int) -> tuple[np.ndarray, bool]:
     #copy m first
     m=m.copy()
 
-    if isinstance(dir,int):
+    if not isinstance(dir,str):
+        assert dir in range(5),f'unkown dir {dir}'
         dir='lrudn'[dir]
     assert m.shape == (N, N)
-    assert dir in ("l", "r", "u", "d","n")
+    assert dir in ("l", "r", "u", "d","n"),f'unkown dir {type(dir)}'
 
     if dir=='n':
         return m,True

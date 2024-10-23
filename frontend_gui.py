@@ -1,11 +1,14 @@
-import wx
-import numpy as np
 from config import *
 from frontend_input import on_press
-from queue import Empty
 from backend_worker import ack_queue, actions_queue, backend_worker
+
+from queue import Empty
 from pynput import keyboard
 
+import numpy as np
+import wx
+
+#main game window implemented in the program
 class myframe(wx.Frame):
     def __init__(
             self,
@@ -31,12 +34,11 @@ class myframe(wx.Frame):
 
         # init config
         self.user=''
-        self.user_undet=True
-        self.tmspan=0.
-        self.desc_lines=[]
-        self.m=np.zeros((4,4),dtype=int)
-        self.state=PENDING
-        self.te_inf=[]
+        self.user_undet=True # if user is undetermined, display circling(\|/-)
+        self.tmspan=0. #time span ,also used time
+        self.m=np.zeros((4,4),dtype=int) #tiles
+        self.state=PENDING #synchronized state
+        self.te_inf=[]# informing text
 
         self.init_ui()
 
@@ -45,12 +47,13 @@ class myframe(wx.Frame):
         self.Bind(wx.EVT_TIMER,self.on_routine,self.timer)
         self.timer.Start(round(1000/FPS))
 
-        self.Bind(wx.EVT_KEY_DOWN,self.on_key)
+        #problematic, use separate keyboard listener instead
+        #self.Bind(wx.EVT_KEY_DOWN,self.on_key)
 
     def init_ui(self):
         self.p1=wx.Panel(
             self
-        ) # p1 for game page
+        ) # p1 for game page. now multipage isn't implemented
         self.p1.SetBackgroundColour('lightblue')
 
         # init tiles
@@ -90,6 +93,7 @@ class myframe(wx.Frame):
         #add sizer to panel
         self.p1.SetSizer(self.main_sizer)
 
+    #alternative implementation of on_press
     def on_key(self,e:wx.KeyEvent):
         return
         keycode=e.GetKeyCode()
@@ -114,12 +118,13 @@ class myframe(wx.Frame):
         
     def on_routine(self,e):
         #shutdown check
-        if not self.lstn.is_alive() :
+        if not self.lstn.is_alive() or not self.backend.is_alive():
             self.Close()
 
         try:
             code,*args=ack_queue.get(block=False)
         except Empty:
+
             # scheduled routine
             actions_queue.put((GET_TIME,))
             actions_queue.put((GET_CURRENT_USER,))
@@ -128,15 +133,20 @@ class myframe(wx.Frame):
                 self.m=np.random.choice(np.arange(12),size=(4,4))
                 self.update_tile()
             return
+        
         # burst routine
+
+        #update state
         if code==UPDATE_STATE:
             self.state=args[0]
             self.tmspan=0.
-            if self.state!=PENDING:
+            if self.state!=PENDING:# when playing, the inf should be varying
                 self.te_inf.clear()
+        #move
         elif code==ACK_MOVE:
             _,self.m=args
             self.update_tile()
+        #win
         elif code==WIN:
             #collect necessary data
             dir, self.m, new_rec, last_rec = args
@@ -151,52 +161,67 @@ class myframe(wx.Frame):
                 self.te_inf.append(f'your record: {tr(span2)} achieved at {d2}GMT')
             elif self.state==CHEATING:
                 self.te_inf.append('Finished! (you have cheated)')
-            else:raise NotImplementedError
+            else:
+                raise NotImplementedError(f"win at invalid state {self.state}")
+            #both tiles and inf changed
             self.update_frame()
-
-        elif code==FAIL:
+        #fail
+        elif code==FAIL: #same like win,less inf
             dir,self.m=args
 
             self.te_inf.clear()
             self.te_inf.append('You failed!')
 
             self.update_frame()
-
+        # set user displayed
         elif code==ACK_CURRENT_USER:
             self.user,*_=args
+            #inf changed
             self.update_te()
+            #user determined
             self.user_undet=False
+        #set time
         elif code==ACK_TIME:
-            if self.state==PENDING:return
+            if self.state==PENDING:#reassure inf maintains, when not playing
+                ack_queue.task_done()
+                return
             self.tmspan,*_=args
+            #inf changed
             self.update_te()
-        else:raise NotImplementedError
+        else:
+            raise NotImplementedError
 
+        #unecessary because we only use stop()
+        ack_queue.task_done()
+
+    #update tile
     def update_tile(self):
         assert len(self.tiles)==16
         assert len(self.bmps)==12
         assert self.m.shape==(4,4)
+
         for i in range(16):
             self.tiles[i].SetBitmap(self.bmps[self.m[i//4,i%4]])
         self.Show()
+    #update inf text
     def update_te(self):
         inf=[]
         if self.state==PENDING:
             if not self.te_inf:
                 if self.user_undet:
-                    inf.append('user: '+'\\|/'[np.random.randint(0,3)])
+                    inf.append('user: '+'\\|/-'[np.random.randint(0,4)])
                 else:
-                    inf.append(f'user: {self.user}')
+                    inf.append(f'user: {tr(self.user)}')
                 inf.append('press direction keys to start')
             else:
                 inf=self.te_inf
         elif self.state in (CHEATING,PLAYING):
-            inf.append(f'user: {self.user}')
+            inf.append(f'user: {tr(self.user)}')
             inf.append(f'used time: {tr(self.tmspan)}'+'(CHEATED)'*(self.state==CHEATING))
         else:
             raise NotImplementedError(f'unkown state {self.state}')
         
-        self.te.SetLabel('\n'.join(inf))
+        self.te.SetLabel('\n\n'.join(inf))
 
     def update_frame(self):
         self.update_te()
@@ -206,7 +231,11 @@ class myframe(wx.Frame):
         self.lstn.stop()
 
 if __name__=='__main__':
+    #test
     app=wx.App()
-    fr=myframe(backend_worker(),keyboard.Listener(on_press=on_press))
+    fr=myframe(
+        backend_worker(),
+        keyboard.Listener(on_press=on_press),
+    )
     app.MainLoop()
         
