@@ -22,8 +22,8 @@ ack_queue = Queue()
 class backend_worker(Thread):
     def __init__(self) -> None:
         super().__init__()
-        self.daemon = True # close with mainn thread
-        self.keep_running = True # postponed shutdown
+        self.daemon = True  # close with mainn thread
+        self.keep_running = True  # postponed shutdown
 
         # load user data
         user_data_path = os.path.join(os.path.split(__file__)[0], "userdata.json")
@@ -49,11 +49,11 @@ class backend_worker(Thread):
         self.start_time = 1e99
         self.end_time = 0
 
-        #log storage
-        self.logs=[]
+        # log storage
+        self.logs = []
 
     def run(self):
-        'called by Thread.start(), baeckend mainloop'
+        "called by Thread.start(), baeckend mainloop"
         while self.keep_running:
             # no scheduled routines, thus unecessary for try..except Empty block
             try:
@@ -70,7 +70,7 @@ class backend_worker(Thread):
                         self.tiles = np.zeros((N, N), dtype=int)
                         self.start_time = time.time()
 
-                    #log
+                    # log
                     if TRACK:
                         self.logs.append(self.tiles.copy())
                     # conduct move
@@ -78,11 +78,14 @@ class backend_worker(Thread):
                     self.tiles, available = update_matrix(self.tiles, dir)
                     # precheck for fail
                     if not available:
-                        available_dirs=[
-                            update_matrix(self.tiles,'lrud'[dir])[1] for dir in range(4)
+                        available_dirs = [
+                            update_matrix(self.tiles, "lrud"[dir])[1]
+                            for dir in range(4)
                         ]
                     else:
-                        available_dirs=[True,]
+                        available_dirs = [
+                            True,
+                        ]
 
                     # check for return
                     # win
@@ -106,7 +109,7 @@ class backend_worker(Thread):
                         if new_record["value"] < last_record["value"]:
                             self.user_data["users"][user]["record"] = new_record
                             self.flush_userdata()
-                        #ackownledge
+                        # ackownledge
                         ack_queue.put(
                             (WIN, dir, np.copy(self.tiles), new_record, last_record)
                         )
@@ -115,21 +118,21 @@ class backend_worker(Thread):
                     elif not np.any(available_dirs):
                         self.end_time = time.time()
                         self.game_state = PENDING
-                        #ackownledge
+                        # ackownledge
                         ack_queue.put((FAIL, dir, np.copy(self.tiles)))
                         ack_queue.put((UPDATE_STATE, PENDING))
                     # normal move done
                     else:
                         ack_queue.put((ACK_MOVE, dir, np.copy(self.tiles)))
 
-                #set user
+                # set user
                 elif code == SET_USER:
-                    #only permitted when pending
+                    # only permitted when pending
                     if self.game_state == PENDING:
                         user2, passwd = args
 
                         # sign in
-                        if user2 in self.user_data["users"]:  
+                        if user2 in self.user_data["users"]:
                             # assert passwd==self.user_data['users'][user]['password'],'wrong password'
                             if (
                                 passwd == self.user_data["users"][user2]["password"]
@@ -148,7 +151,7 @@ class backend_worker(Thread):
                         else:  # unqualified user name
                             pass
 
-                        #store and ack
+                        # store and ack
                         self.flush_userdata()
                         ack_queue.put(
                             (ACK_CURRENT_USER, self.user_data["current_user"])
@@ -157,46 +160,46 @@ class backend_worker(Thread):
                 elif code == GET_TIME:
                     if self.game_state != PENDING:
                         span = time.time() - self.start_time
-                    else:#when pending, tmspan default static
+                    else:  # when pending, tmspan default static
                         span = self.end_time - self.start_time
                     ack_queue.put((ACK_TIME, span))
 
                 elif code == GET_CURRENT_USER:
                     ack_queue.put((ACK_CURRENT_USER, self.user_data["current_user"]))
 
-                #hint,Ctrl+H
+                # hint,Ctrl+H
                 elif code == HINT:
                     if self.game_state != PENDING:
                         self.game_state = CHEATING
                         ack_queue.put((UPDATE_STATE, CHEATING))
 
-                        #select the best move
+                        # select the best move
                         # sel = []
                         # for dir in range(4):
                         #     tails, available = update_matrix(self.tiles, dir)
                         #     sel.append((np.sum(tails == 0), dir))
                         # best_dir = max(sel)[1]
                         # new implementation
-                        best_dir=simple_search(self.tiles)
+                        best_dir = simple_search(self.tiles)
                         while not actions_queue.empty():
                             actions_queue.task_done()
                             actions_queue.get_nowait()
                         actions_queue.put((MOVE, best_dir))
-                #log, Ctrl+L
-                elif code==LOG:
+                # log, Ctrl+L
+                elif code == LOG:
                     if TRACK:
-                        last=np.load('./log.npz')['arr_0']
-                        np.savez('./log.npz',np.concatenate((self.logs,last)))
-                        self.logs=[]
-                #unkown opcode
+                        last = np.load("./log.npz")["arr_0"]
+                        np.savez("./log.npz", np.concatenate((self.logs, last)))
+                        self.logs = []
+                # unkown opcode
                 else:
                     raise NotImplementedError(f"backend: code {code} uncaught")
                 actions_queue.task_done()
 
-            #scheduled routine
+            # scheduled routine
             except Empty:
                 pass
-        #handle shutdown
+        # handle shutdown
         self.FW.close()
 
     # stopped running

@@ -4,6 +4,7 @@ import numpy as np
 
 np.random.seed(1145)
 
+
 def update_array(arr: tuple[int]) -> tuple[int]:
     """
     update_array(arr:Tuple_Like)->Tuple_Like\n
@@ -31,24 +32,24 @@ def update_array(arr: tuple[int]) -> tuple[int]:
     return tuple(res) + (0,) * (N - l)
 
 
-def update_matrix(m: np.ndarray, dir: str|int) -> tuple[np.ndarray, bool]:
+def update_matrix(m: np.ndarray, dir: str | int) -> tuple[np.ndarray, bool]:
     """
     update_matrix(m:array(4,4))->m:array(4,4),flag:int\n
     update the full matrix of tiles in given direction(left,right,upper,downer)\n
     ordering of tiles: order='C'\n
     Returns:\n\tm\tthe new matrix\n\tflag\tdecide the game result, false for possibly trrapped
     """
-    #copy m first
-    m=m.copy()
+    # copy m first
+    m = m.copy()
 
-    if not isinstance(dir,str):
-        assert dir in range(5),f'unkown dir {dir}'
-        dir='lrudn'[dir]
+    if not isinstance(dir, str):
+        assert dir in range(5), f"unkown dir {dir}"
+        dir = "lrudn"[dir]
     assert m.shape == (N, N)
-    assert dir in ("l", "r", "u", "d","n"),f'unkown dir {type(dir)}'
+    assert dir in ("l", "r", "u", "d", "n"), f"unkown dir {type(dir)}"
 
-    if dir=='n':
-        return m,True
+    if dir == "n":
+        return m, True
 
     # transfer by direction
     if dir in ("u", "d"):
@@ -85,8 +86,14 @@ def update_matrix(m: np.ndarray, dir: str|int) -> tuple[np.ndarray, bool]:
 if __name__ == "__main__":
     print(update_array((1,) * N))
     print(update_matrix(np.cumsum(np.ones((N, N), dtype=int), axis=1), dir="d"))
-    m=np.array(eval('''[[2 2 2 0]
+    m = np.array(
+        eval(
+            """[[2 2 2 0]
  [3 3 1 0]
  [2 2 0 0]
- [3 2 0 0]]'''.replace(' ',',')))
-    print(update_matrix(m,0))
+ [3 2 0 0]]""".replace(
+                " ", ","
+            )
+        )
+    )
+    print(update_matrix(m, 0))

@@ -23,5 +23,5 @@ def on_press(key):
         elif eval(str(key)) == "\x11":  # Ctrl+Q
             b = webbrowser.get()
             b.open_new("https://www.github.com/lyn12233")
-        elif eval(str(key))=='\x0c': #Ctrl+L
+        elif eval(str(key)) == "\x0c":  # Ctrl+L
             actions_queue.put((LOG,))
