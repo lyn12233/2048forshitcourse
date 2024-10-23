@@ -8,13 +8,22 @@ from pynput import keyboard
 import numpy as np
 import wx
 
+import os
+
+current_path = os.path.split(__file__)[0]
+icon_path = os.path.join(current_path, "img", "my2048.ico")
+
 
 # main game window implemented in the program
 class myframe(wx.Frame):
     def __init__(
         self, backend: backend_worker, lstn: keyboard.Listener, user="", passwd=""
     ):
-        super().__init__(parent=None, size=GUI_SIZE)
+        # frame init
+        super().__init__(parent=None, size=GUI_SIZE, title="2048")
+        self.SetIcon(wx.Icon(icon_path))
+
+        # component init
         self.backend = backend
         self.lstn = lstn
         self.backend.start()
@@ -71,11 +80,12 @@ class myframe(wx.Frame):
         self.tile_sizer.SetMinSize(*GUI_TILE_SIZE)
 
         # init supplement
-        self.te = wx.StaticText(self.p1, label="", style=wx.ALIGN_CENTER_HORIZONTAL)
+        self.te = wx.StaticText(self.p1, label="", style=wx.ALIGN_LEFT)
 
         # init main sizer
         self.main_sizer = wx.BoxSizer()
         self.main_sizer.Add(self.tile_sizer, proportion=0, flag=wx.CENTRE)
+        self.main_sizer.AddSpacer(30)
         self.main_sizer.Add(self.te, proportion=1, flag=wx.CENTRE)
 
         self.SetMinSize(GUI_GRID_SIZE)
@@ -120,7 +130,7 @@ class myframe(wx.Frame):
             actions_queue.put((GET_TIME,))
             actions_queue.put((GET_CURRENT_USER,))
             # varying at pending
-            if self.state == PENDING and not self.te_inf:
+            if self.state == PENDING and not self.te_inf and np.random.random() < 0.3:
                 self.m = np.random.choice(np.arange(12), size=(4, 4))
                 self.update_tile()
             return
@@ -151,6 +161,8 @@ class myframe(wx.Frame):
                 self.te_inf.append(
                     f"finished game in {tr(span)}" + " (new record!)" * IsBest
                 )
+                if IsBest:
+                    span2, d2 = span, d
                 self.te_inf.append(f"your record: {tr(span2)} achieved at {d2}GMT")
             elif self.state == CHEATING:
                 self.te_inf.append("Finished! (you have cheated)")

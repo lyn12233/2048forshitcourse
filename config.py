@@ -30,7 +30,7 @@ ACTIONS = L, R, U, D, NOP = range(5)
 TRACK = False
 
 # GUI config
-GUI_SIZE = (900, 500)
+GUI_SIZE = (700, 420)
 GUI_GRID_SIZE = (500, 500)
 GUI_TILE_SIZE = (100, 100)
 

@@ -4,7 +4,7 @@
 #set text(font: font_zh.SongTi, size: font_size_zh.XiaoSi)
 #set par(leading: 12pt, first-line-indent: 0em, justify: true)
 // set default enum indent
-#set enum(indent: 0.2cm, body-indent: 0.1cm)
+#set enum(indent: 0.2cm, body-indent: 0.2cm)
 
 //set equation props
 #set math.equation(numbering: "(1)", supplement: "")
@@ -46,16 +46,19 @@
 本作业设计2048小游戏, 并按要求实现提示模式, 以期锻炼编程本领, 实践程序设计知识。
 #SubSection[设计内容]
 #MYPAR()设计内容包含如下几个方面:
-+ *2048小游戏规则* : 2048小游戏主要组成部分为4*4的方格阵列, 方格为空或显示2, ..., 2048之一的数值; 游戏的主要流程为用户通过按方向键, 使方格按移动方向依次尝试与该方向相邻方格合并 (如果方格与相邻方格未发生合并且代表的值相同则进行合并。每进行一次移动后, 尝试在空方格生成2个值为2或4的方格, 空方格为一个时将其值改变为2或4) ; 游戏的结束判定为: 方格阵不能发生改变则为失败、出现值为2048的方格则为胜利。
++ *2048小游戏规则* : 2048小游戏主要组成部分为4*4的方格阵列 (tiles), 方格为空或显示2, ..., 2048之一的数值; 游戏的主要流程为用户通过按方向键, 使方格按移动方向依次尝试与该方向相邻方格合并 (如果方格与相邻方格未发生合并且代表的值相同则进行合并。每进行一次移动后, 尝试在空方格生成2个值为2或4的方格, 空方格为一个时将其值改变为2或4); 游戏的结束判定为: 方格阵不能发生改变则为失败、出现值为2048的方格则为胜利。
 + *提示模式* : 用户按下Ctrl+H请求提示, 此时方格进行一次合并, 以尽可能达到游戏胜利。
-+ *用户得分记录* : 作业参考#link("")[Minesweeper Arbiter] 以游戏用时作为用户得分, 最短用时为该用户的纪录; 作业同时实现用户注册、登录。
++ *用户得分记录* : 作业参考#link("https://minesweeper.fandom.com/wiki/Minesweeper_Arbiter")[Minesweeper Arbiter] 以游戏用时作为用户得分, 最短用时为该用户的纪录; 作业同时实现用户注册、登录。
++ *界面渲染* : 考虑实现命令行和图形界面的渲染。
 #SubSection[应用平台]
-#MYPAR() 本程序实现在Windows11下进行搭建和测试, 理论上可以在任何支持Python和具有tty功能
- (即支持ANSI转义序列渲染) 的平台上运行。
+#MYPAR() 本程序实现在Windows11下进行搭建和测试, 理论上可以在任何支持Python和具有特定要求的平台上运行:
++ 命令行界面 (Console User Interface, CUI): 平台支持ANSI转义序列
++ 图形界面 (Geographic User Interface, GUI): 平台安装了合适的wxPython图形库。
 #SubSection[开发工具]
 + *编译器* Python 3.11
-+ *程序编辑器* VSCode (最新版本, 插件pylancer, python 等)
-+ *终端* PowerShell (最新版本)
++ *程序编辑器* VSCode (最新版本, 插件pylance, python 等)
++ *命令行终端* PowerShell (最新版本)
++ *绘图工具* Inkscape 4.1
 #SubSection[软件库]
 #MYPAR()  使用的Python库包括:
 #{
@@ -66,16 +69,19 @@
     columns: (3cm,4cm,6.5cm),
     table.hline(y:0, stroke: 1pt),
     table.hline(y:1, stroke: 0.5pt),
-    table.hline(y:7, stroke: 1pt),
+    table.hline(y:9, stroke: 1pt),
     [库名称],[版本],[简介],
     [numpy],[1.7.7],[实现常见的数学运算],
     [pynput],[1.25.2],[实现跨平台兼容的键盘监听],
+    [wxPython],[3.1.5.6],[wx图形库],
     [queue],[(内置库)],[实现跨线程通信],
     [time],[(内置库)],[获取当前时间],
     [json],[(内置库)],[配置信息存取],
+    [argparse],[(内置库)],[处理命令行参数],
     [os,sys],[(内置库)],[包含多种系统功能],
   )
 }
+#MYPAR() _注: wxPython的官方版本存在与Python高版本不兼容的问题, 实际使用其分支wxPython-zombie。_
 
 #Section[详细设计]
 #SubSection[总体方案]
@@ -94,13 +100,12 @@
 + #b("frontend_worker"): 根据#b("backend_worker")的结果渲染命令行界面。
 + #b("actions_queue"), #b("ack_queue"): 内置库queue的实例, 负责在各部分间传递消息。
 
-#MYPAR()程序以#b("frontend_worker.py")中的#b("frontend_worker.mainloop")作为主循环
+#MYPAR()程序#b("frontend_worker")作为主循环
 运行。主循环的流程为:
 + 创建#b("backend_worker")和#b("pynput.keyboard.Listener(on_press)")实例。
 + 根据命令行参数配置用户, 发送请求至#b("actions_queue")。
 + 接收#b("ack_queue")消息, 并结合当前状态渲染命令行; 一段时间内若未接收到则发送更新计时请求。
-+ 重复上一步骤直到#b("listener")实例停止。
-+ 停止#b("backend_worker")实例。
++ 重复上一步骤直到#b("listener")或#b("backend_worker")实例停止。
 
 #MYPAR() 遵循状态机方法, 程序实现了3个游戏状态 (state) : 停止状态 (pending) 、运行状态 (playing) 和提示状态 (cheated) 。程序启动时为停止状态, 在停止状态下通过按方向键进入运行状态。运行状态下通过提示 (Ctrl+H) 进入提示状态。满足结束条件后回到停止状态。状态由#b("backend_worker")产生, 并发送到#b("frontend_worker")
 进行同步。#b("backend_worker")和#b("frontend_worker")在不同状态下将做出不同的响应。
@@ -122,61 +127,85 @@
 #SubSub[实时交互实现]
 #MYPAR()程序通过#b("pynput.keyboard.Listener")实现键盘实时读取。处理键盘事件对应的例程为
 #b("on_press"), 位于#b("frontend_input.py"), 实现对键盘事件的初步处理。
-#MYPAR()程序的类#b("frontend_worker")在命令行终端使用ANSI转义字符刷新并以彩色渲染游戏内容。游戏内容包括4*4方格阵, 用户信息, 时间信息, 结算标语, 提示行 (LEADIN) 等, 在终端窗口大小改变时, 程序使用#b("clear") (Linux) 或#b("cls") (Windows, MacOS) 实现清屏, 计算边界使游戏内容始终处于居中位置。由于程序使用ANSI转义字符将光标移动至 (0,0) 然后打印输出, 窗口不会出现闪屏的情况。
+#MYPAR()对于CUI, 程序的类#b("frontend_worker")在命令行终端使用ANSI转义字符刷新并以彩色渲染游戏内容。游戏内容包括4*4方格阵, 用户信息, 时间信息, 结算标语, 提示行 (LEADIN) 等。在终端窗口大小改变时, 程序使用#b("clear") (Linux) 或#b("cls") (Windows) 实现清屏, 计算边界使游戏内容始终处于居中位置。由于程序使用ANSI转义字符将光标移动至 (0,0) 然后打印输出, 窗口不会出现闪屏的情况。
+#MYPAR()对于GUI, 程序以#b("myframe")作为#b("frontend_worker"), 创建窗口显示方格阵 (左侧)和其他上述信息 (右侧)。方格为#b("wx.StaticBitmap")实例, 图像来自文件夹#b("./img/bmp/")。程序以#b("wx.GridSizer")和#b("wx.BoxSizer")控制界面各组件的排列, 并设置了方格阵的最小大小, 达到美观的效果。
 
 #SubSub[提示模式实现]
 #MYPAR()游戏模式下用户按下Ctrl+H进入提示模式, 此时程序状态为提示状态, 命令行出现 (CHEATED) 字样。该状态一直持续到游戏结束, 在提示模式下胜利不计入得分。
+#MYPAR()一次提示一蒙特卡洛方法随机生成新的方格的可能, 对4种移动操作生成决策树, 默认搜索深度为4。对端节点, 以 *方格值之和+空方格数* 作为方格阵的估计结果。搜索决策树并求解最优移动时, 参考
+#link("https://www.chessprogramming.org/Monte-Carlo_Tree_Search")[ChessProgramming wiki]中的介绍, 对随机生成新方格发步骤取平均, 对移动操作的结果取最优, 由下到上得到当前最优操作及最优估计与当前估计之差。
 #MYPAR()提示模式下维持用户操作, 仅当每按下一次Ctrl+H向#b("actions_queue")发送提示请求, 进行自动合并。
 
 #SubSub[用户功能实现]
-#MYPAR()游戏支持多用户配置, 以命令行启动参数的第1、2项作为用户名和密码, 向#b("backend_worker")发送设置用户请求, 尝试注册或登录。若命令行参数少于2项, 默认用户和密码均为空字符串。新的用户名必须符合变量的命名规则且若用户已存在, 密码必须一致。若登陆失败且上一用户密码为空, 按上一用户登录, 若不为空按默认用户登录。
+#MYPAR()游戏支持多用户配置, 以命令行参数的#b("-c")、#b("-p")项作为用户名和密码, 向#b("backend_worker")发送设置用户请求, 尝试注册或登录。若命令行参数少于2项, 默认用户和密码均为空字符串。新的用户名必须符合变量的命名规则且若用户已存在, 密码必须一致。若登陆失败且上一用户密码为空, 按上一用户登录, 若不为空按默认用户登录。
 #MYPAR()以游戏用时折算的用户得分将按用户记录。用户创造的新的记录在胜利结算时添加 (new record!) 字样。
 
+#SubSub[CUI/GUI选择]
+#MYPAR()游戏默认为命令行渲染, 存在命令行参数#b("--gui")时选择GUI渲染。由于不同模式下对平台的要求不同, 
+这一部分要求只在选择该模式时进行检测。
+
 #SubSub[功能键]
-#MYPAR()除了按下Ctrl+H进入提示模式外, 程序还响应Ctrl+C和Ctrl+H, 分别实现
-程序退出和打开#text(fill: aqua)[#link("https://github.com/lyn12233/2048forshitcourse")[主页说明]]
+#MYPAR()除了按下Ctrl+H进入提示模式外, 程序还响应Ctrl+C、Ctrl+L和Ctrl+H, 分别实现
+程序退出、方格阵记录和打开#text(fill: aqua)[#link("https://github.com/lyn12233/2048forshitcourse")[主页说明]]
 的功能。
+
+
+#SubSection[程序文件说明]
+
+#{
+  set align(center)
+  table(
+    align: center,
+    stroke: none,
+    columns: 2,
+    table.hline(y:0, stroke: 1pt),
+    table.hline(y:1, stroke: 0.5pt),
+    table.hline(y:8, stroke: 1pt),
+    [文件名],[说明],
+    [\_\_main\_\_.py],[入口点],
+    [config.py],[包含配置宏],
+    [frontend_gui.py],[实现GUI界面],
+    [frontend_input.py],[键盘事件监听],
+    [frontend_output.py],[实现CUI界面],
+    [game_logic.py],[处理方格阵的逻辑],
+    [game_search.py],[最优操作搜索],
+  )
+}
+
 
 #Section[完成情况]
 #SubSection[程序运行结果]
-#MYPAR()@demo_1 至@demo_6 展示了程序所有状态下的界面。注意为方便展示, 生成图片时降低了胜利判定标准, 
-如在出现值为128的方格时胜利 (如@demo_2)。
-#figure(
-  image("../img/on_start.png", height: 10cm),
-  caption: [启动界面, 方格样式的展示]
-)<demo_1>
-#figure(
-  image("../img/finish_anonymous.png", height: 10cm),
-  caption: [胜利结算画面 (默认用户)]
-)<demo_2>
-#figure(
-  image("../img/new_record.png", height: 10cm),
-  caption: [胜利结算画面 (名为user1的用户, 新纪录)]
-)<demo_3>
-#figure(
-  image("../img/cheating.png", height: 10cm),
-  caption: [提示模式]
-)<demo_4>
-#figure(
-  image("../img/fail.png", height: 10cm),
-  caption: [失败结算画面]
-)<demo_5>
-#figure(
-  image("../img/finish_cheated.png", height: 10cm),
-  caption: [提示模式下胜利]
-)<demo_6>
+#MYPAR()图2 至图11 展示了程序所有状态下的界面。注意为方便展示, 生成图片时降低了胜利判定标准, 
+如在出现值为128的方格时胜利 (如图4)。
+
+#include "demos.typ"
 
 #SubSection[程序使用说明]
 
 #SubSub[依赖库安装]
-#MYPAR()第三方依赖库为numpy, pynput, 运行#b("pip install -r requirements.txt")安装。
+#MYPAR()第三方依赖库为numpy, pynput, wxPython, 运行#b("pip install -r requirements.txt")安装。
 #SubSub[运行方法]
 #MYPAR()可以通过如下指令运行此程序。
 
 #align(center)[
 #block(fill: luma(235), width: 16cm, outset: 3pt)[
 #set align(left)
-#raw("cd path/to/game/folder\npython . [<user_name>] [<password>]",lang:"bash", align: center)]]
+#raw("cd path/to/game/folder\npython . ARGUMENTS",lang:"bash", align: center)]]
+
+参数的说明:
+#block(
+  fill: luma(235),width: 16cm,outset: 3pt,[
+    #set align(left)
+    #raw(
+      "options:
+  -h, --help                  show this help message and exit
+  -c USER, --user USER        set user name
+  -p PASSWD, --passwd PASSWD  set password
+  -g, --gui                   enable gui",
+      lang: "bash",
+    )
+  ]
+)
 
 #MYPAR() 也可以通过执行#b("__main__.py")运行此程序。
 
@@ -184,20 +213,19 @@
 - 9月28日至10月2日, 设计程序架构, 检索并确定命令行渲染方法和平台兼容性好的键盘响应方法。
 - 10月2日至10月4日, 完成程序主体的的编写。
 - 10月4日至10月10日, 完成本报告的编写和修改。
+- 10月10日至10月23日, 完成GUI部分。
 
 #Section[设计总结]
 #SubSection[存在的问题]
 + 提示不够智能。
 + 命令行颜色恢复存在问题。
 #SubSection[改进措施]
-+ 寻找更先进的提示算法, 如训练RNN网络等。
++ 寻找更先进的提示算法, 如训练神经网络等。
 + 修改#b("frontend_worker"), 使用图形界面输出。
 #SubSection[课程收获]
 #MYPAR()本次程序设计锻炼了我的编程能力。
 #SubSection[课程建议]
-#MYPAR()建议本课程增加学时, 覆盖更多系统库和第三方库的介绍, 
-如json, numpy, pandas, statsmodels, matplotlib, socket, selenium等, 
-瞄准数模竞赛和自动化便利生活等目标。
+#MYPAR()建议本课程增加学时, 覆盖更多系统库和第三方库的介绍。建议介绍编程语义语法方面的内容, 增强学生的泛化学习能力。
 
 #Section[附录]
 #SubSection[程序源码]
