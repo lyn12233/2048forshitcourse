@@ -70,11 +70,11 @@ def update_matrix(m: np.ndarray, dir: str | int) -> tuple[np.ndarray, bool]:
     # add 2 new tiles
     idx_blank = np.argwhere(m == 0)
     if idx_blank.shape[0] == 0:
-        return m, False
+        return m, False  # when no null tile generates, availability is false
     elif idx_blank.shape[0] == 1:
         idx_new = idx_blank
     else:
-        chc = np.random.choice(idx_blank.shape[0], 2, replace=False)
+        chc = np.random.choice(idx_blank.shape[0], 1, replace=False)  # previously is 2
         idx_new = idx_blank[chc]
     # randomly
     for i in idx_new:
